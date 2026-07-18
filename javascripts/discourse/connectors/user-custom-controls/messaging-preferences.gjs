@@ -26,19 +26,26 @@ export default class MessagingPreferencesConnector extends Component {
   constructor(owner, args) {
     super(owner, args);
 
-    const customFields = args.outletArgs?.model?.custom_fields || {};
+    const model = args.model || args.outletArgs?.model;
+    const customFields = model?.custom_fields || {};
+
     this.worksWellValue = customFields[WORKS_WELL_FIELD] || "";
     this.pleaseAvoidValue = customFields[PLEASE_AVOID_FIELD] || "";
   }
 
   get model() {
-    return this.args.outletArgs?.model;
+    // Current Discourse versions expose outlet arguments directly. Keep the
+    // outletArgs fallback for compatibility with older supported versions.
+    return this.args.model || this.args.outletArgs?.model;
   }
 
   get shouldRender() {
+    // Do not hide the controls when a client setting or can_edit flag is not
+    // present in an older/preloaded model. Explicit false values still win.
     return (
-      this.siteSettings.messaging_preferences_enabled === true &&
-      this.model?.can_edit === true
+      this.siteSettings?.messaging_preferences_enabled !== false &&
+      this.model &&
+      this.model.can_edit !== false
     );
   }
 
