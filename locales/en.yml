@@ -1,0 +1,17 @@
+en:
+  theme_metadata:
+    description: "Frontend for member-defined messaging preferences."
+
+  messaging_preferences:
+    settings:
+      title: "Messaging preferences"
+      description: "Let other members know what helps you feel comfortable when they contact you through personal messages or direct chat. These preferences are informational and do not replace the community guidelines."
+      works_well:
+        label: "What works well for me"
+        description: "For example: introduce yourself, explain why you are messaging, or allow time for a reply."
+        placeholder: "Describe what helps make conversations comfortable and enjoyable for you."
+      please_avoid:
+        label: "Please avoid"
+        description: "For example: repeated messages, unsolicited explicit content, or pressure to respond."
+        placeholder: "Describe behaviour or types of messages you would prefer not to receive."
+      character_count: "%{used} / %{maximum}"

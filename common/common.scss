@@ -1,0 +1,56 @@
+.messaging-preferences-settings {
+  margin-top: 2.5rem;
+  max-width: 46rem;
+
+  &__title {
+    margin: 0 0 0.5rem;
+    font-size: var(--font-up-3);
+    line-height: var(--line-height-large);
+  }
+
+  &__description {
+    margin: 0 0 1.5rem;
+    color: var(--primary-medium);
+    line-height: var(--line-height-medium);
+  }
+
+  &__field {
+    margin-bottom: 1.5rem;
+  }
+
+  &__field .control-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+
+  &__field .instructions {
+    margin: 0 0 0.5rem;
+  }
+
+  &__textarea {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-height: 6.5rem;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  &__count {
+    margin-top: 0.25rem;
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+    text-align: right;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .messaging-preferences-settings {
+    margin-top: 2rem;
+
+    &__textarea {
+      min-height: 7.5rem;
+    }
+  }
+}
