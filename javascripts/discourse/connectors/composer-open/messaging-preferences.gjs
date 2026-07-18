@@ -54,7 +54,10 @@ export default class MessagingPreferencesComposerConnector extends Component {
       !model ||
       model.editingPost ||
       !model.privateMessage ||
-      !settingEnabled(this.siteSettings?.messaging_preferences_enabled)
+      !settingEnabled(this.siteSettings?.messaging_preferences_enabled) ||
+      !settingEnabled(
+        this.siteSettings?.messaging_preferences_personal_messages_enabled
+      )
     ) {
       return null;
     }
@@ -105,9 +108,13 @@ export default class MessagingPreferencesComposerConnector extends Component {
 
   @action
   initializeGate() {
+    const acknowledgementEnabled = settingEnabled(
+      this.siteSettings?.messaging_preferences_require_acknowledgement
+    );
+
     this.messagingPreferencesGate.setComposerBlocked(
       this.model,
-      Boolean(this.targetUsername)
+      Boolean(this.targetUsername) && acknowledgementEnabled
     );
   }
 

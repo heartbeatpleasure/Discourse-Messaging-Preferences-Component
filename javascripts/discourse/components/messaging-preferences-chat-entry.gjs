@@ -47,6 +47,9 @@ export default class MessagingPreferencesChatEntry extends Component {
     if (
       !this.currentUser ||
       !settingEnabled(this.siteSettings?.messaging_preferences_enabled) ||
+      !settingEnabled(
+        this.siteSettings?.messaging_preferences_direct_chat_enabled
+      ) ||
       !channel?.isDirectMessageChannel ||
       channel.chatable?.group === true
     ) {
@@ -72,7 +75,11 @@ export default class MessagingPreferencesChatEntry extends Component {
   }
 
   initializeGate() {
-    if (this.targetUsername) {
+    const acknowledgementEnabled = settingEnabled(
+      this.siteSettings?.messaging_preferences_require_acknowledgement
+    );
+
+    if (this.targetUsername && acknowledgementEnabled) {
       // Block sending while the current server-side preference version is
       // being checked or still requires acknowledgement.
       this.messagingPreferencesGate.setChatBlocked(this.channel, true);

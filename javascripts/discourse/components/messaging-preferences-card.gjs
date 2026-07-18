@@ -4,6 +4,7 @@ import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
+import { service } from "@ember/service";
 import { ajax } from "discourse/lib/ajax";
 import getURL from "discourse/lib/get-url";
 import { not } from "discourse/truth-helpers";
@@ -14,6 +15,10 @@ import { themePrefix } from "virtual:theme";
 
 function themeI18n(key, options) {
   return i18n(themePrefix(key), options);
+}
+
+function settingEnabled(value) {
+  return value !== false && value !== "false" && value !== 0 && value !== "0";
 }
 
 function normalizeUsername(username) {
@@ -40,6 +45,8 @@ async function fetchPreferences(username) {
 }
 
 export default class MessagingPreferencesCard extends Component {
+  @service siteSettings;
+
   @tracked preferences;
   @tracked expanded = false;
   @tracked acknowledgementInProgress = false;
@@ -52,12 +59,42 @@ export default class MessagingPreferencesCard extends Component {
     return this.args.mode === "chat" ? "chat" : "message";
   }
 
-  get shouldRender() {
-    return this.preferences?.has_preferences === true;
+  get isChat() {
+    return this.mode === "chat";
   }
 
   get acknowledgementRequired() {
     return this.preferences?.acknowledgement_required === true;
+  }
+
+  get acknowledgementFeatureEnabled() {
+    return settingEnabled(
+      this.siteSettings?.messaging_preferences_require_acknowledgement
+    );
+  }
+
+  get showReminderAfterAcknowledgement() {
+    return settingEnabled(
+      this.siteSettings
+        ?.messaging_preferences_show_reminder_after_acknowledgement
+    );
+  }
+
+  get showCompact() {
+    if (!this.preferences?.has_preferences || this.expanded) {
+      return false;
+    }
+
+    if (this.preferences.acknowledged === true) {
+      return this.showReminderAfterAcknowledgement;
+    }
+
+    return true;
+  }
+
+  get shouldRender() {
+    return this.preferences?.has_preferences === true &&
+      (this.expanded || this.showCompact);
   }
 
   get worksWell() {
@@ -75,10 +112,9 @@ export default class MessagingPreferencesCard extends Component {
   }
 
   get compactClass() {
-    const modeClass =
-      this.mode === "chat"
-        ? "messaging-preferences-card__compact--chat-banner"
-        : "messaging-preferences-card__compact--message";
+    const modeClass = this.isChat
+      ? "messaging-preferences-card__compact--chat-banner"
+      : "messaging-preferences-card__compact--message";
 
     return `btn-flat messaging-preferences-card__compact ${modeClass}`;
   }
@@ -96,12 +132,15 @@ export default class MessagingPreferencesCard extends Component {
   }
 
   get compactLabel() {
-    const key =
-      this.mode === "chat"
-        ? "messaging_preferences.display.chat_compact_label"
-        : "messaging_preferences.display.compact_label";
+    const key = this.isChat
+      ? "messaging_preferences.display.chat_compact_label"
+      : "messaging_preferences.display.compact_label";
 
     return themeI18n(key, { username: this.activeUsername });
+  }
+
+  get compactShortLabel() {
+    return themeI18n("messaging_preferences.display.chat_compact_label_short");
   }
 
   get worksWellLabel() {
@@ -154,9 +193,9 @@ export default class MessagingPreferencesCard extends Component {
       return;
     }
 
-    // Prevent sending until the current server-side preference version has
-    // been checked. Every composer/chat open performs a fresh request.
-    this.args.onRequirementChange?.(true);
+    // Only block during the server check when acknowledgements are enabled.
+    // Informational-only mode never disables the composer or Chat send button.
+    this.args.onRequirementChange?.(this.acknowledgementFeatureEnabled);
 
     try {
       const preferences = await fetchPreferences(normalizedUsername);
@@ -284,24 +323,24 @@ export default class MessagingPreferencesCard extends Component {
             <:body>
               <div class="messaging-preferences-modal__preferences">
                 {{#if this.worksWell}}
-                  <section
-                    class="messaging-preferences-modal__preference messaging-preferences-modal__preference--works-well"
-                  >
+                  <section class="messaging-preferences-modal__preference">
                     <h3 class="messaging-preferences-modal__label">
                       {{this.worksWellLabel}}
                     </h3>
-                    <div class="messaging-preferences-modal__text">{{this.worksWell}}</div>
+                    <div class="messaging-preferences-modal__text">
+                      {{this.worksWell}}
+                    </div>
                   </section>
                 {{/if}}
 
                 {{#if this.pleaseAvoid}}
-                  <section
-                    class="messaging-preferences-modal__preference messaging-preferences-modal__preference--please-avoid"
-                  >
+                  <section class="messaging-preferences-modal__preference">
                     <h3 class="messaging-preferences-modal__label">
                       {{this.pleaseAvoidLabel}}
                     </h3>
-                    <div class="messaging-preferences-modal__text">{{this.pleaseAvoid}}</div>
+                    <div class="messaging-preferences-modal__text">
+                      {{this.pleaseAvoid}}
+                    </div>
                   </section>
                 {{/if}}
 
@@ -338,7 +377,7 @@ export default class MessagingPreferencesCard extends Component {
               {{/if}}
             </:footer>
           </DModal>
-        {{else}}
+        {{else if this.showCompact}}
           <button
             type="button"
             class={{this.compactClass}}
@@ -348,9 +387,18 @@ export default class MessagingPreferencesCard extends Component {
             {{on "click" this.show}}
           >
             {{dIcon "circle-info"}}
-            <span class="messaging-preferences-card__compact-label">
+            <span
+              class="messaging-preferences-card__compact-label messaging-preferences-card__compact-label--full"
+            >
               {{this.compactLabel}}
             </span>
+            {{#if this.isChat}}
+              <span
+                class="messaging-preferences-card__compact-label messaging-preferences-card__compact-label--short"
+              >
+                {{this.compactShortLabel}}
+              </span>
+            {{/if}}
             <span class="messaging-preferences-card__compact-action">
               {{this.viewLabel}}
             </span>

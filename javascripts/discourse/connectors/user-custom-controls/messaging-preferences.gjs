@@ -18,6 +18,10 @@ function themeI18n(key, options) {
   return i18n(themePrefix(key), options);
 }
 
+function settingEnabled(value) {
+  return value !== false && value !== "false" && value !== 0 && value !== "0";
+}
+
 export default class MessagingPreferencesConnector extends Component {
   @service currentUser;
   @service siteSettings;
@@ -60,8 +64,20 @@ export default class MessagingPreferencesConnector extends Component {
   }
 
   get shouldRender() {
+    const featureEnabled = settingEnabled(
+      this.siteSettings?.messaging_preferences_enabled
+    );
+    const hasEnabledContext =
+      settingEnabled(
+        this.siteSettings?.messaging_preferences_personal_messages_enabled
+      ) ||
+      settingEnabled(
+        this.siteSettings?.messaging_preferences_direct_chat_enabled
+      );
+
     return (
-      this.siteSettings?.messaging_preferences_enabled !== false &&
+      featureEnabled &&
+      hasEnabledContext &&
       this.model?.can_edit !== false &&
       this.isCurrentUser
     );

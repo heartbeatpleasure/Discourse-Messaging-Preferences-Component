@@ -63,9 +63,8 @@
   margin: 0 0 0.75rem;
 }
 
-// The Chat integration is registered in the composer outlet because that is
-// the stable outlet which exposes the active channel. Its visible content is
-// portalled to the top of the surrounding .chat-channel instead.
+// Chat exposes the active channel in the composer outlet. The marker itself is
+// hidden and the visible banner is portalled to the top of .chat-channel.
 .messaging-preferences-chat-slot {
   display: none;
 }
@@ -92,69 +91,67 @@
 
 .messaging-preferences-modal {
   .d-modal__container {
-    width: min(38rem, calc(100vw - 2rem));
-    max-width: 38rem;
-    max-height: min(46rem, calc(100dvh - 2rem));
+    width: min(44rem, calc(100vw - 2rem));
+    max-width: 44rem;
+    max-height: min(48rem, calc(100dvh - 2rem));
     overflow: hidden;
     border-radius: 20px;
     background: var(--secondary);
-    box-shadow: 0 18px 50px rgb(0 0 0 / 18%);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 24%);
   }
 
   &__header {
-    padding: 1.45rem 1.5rem 1.1rem;
+    padding: 1.85rem 2rem 1.35rem;
     border-bottom: 1px solid var(--primary-low);
     background: var(--secondary);
   }
 
   .d-modal__title-text {
+    margin: 0;
     font-size: var(--font-up-3);
     line-height: 1.2;
   }
 
   .d-modal__subtitle-text {
-    max-width: 32rem;
-    margin-top: 0.45rem;
+    max-width: 37rem;
+    margin-top: 0.55rem;
     color: var(--primary-medium);
     line-height: var(--line-height-medium);
   }
 
-  .d-modal__footer {
-    justify-content: flex-end;
-    padding: 1rem 1.5rem 1.25rem;
-    border-top: 1px solid var(--primary-low);
-    background: var(--secondary);
+  .modal-close {
+    margin-top: 0.15rem;
+    border-radius: var(--d-button-border-radius, var(--d-border-radius));
   }
 
   &__body {
-    padding: 1.25rem 1.5rem 1.5rem;
+    padding: 1.5rem 2rem 1.75rem;
     overflow-y: auto;
     background: var(--secondary);
   }
 
   &__preferences {
     display: grid;
-    gap: 0.9rem;
+    gap: 1.35rem;
   }
 
   &__preference {
     min-width: 0;
-    padding: 1rem 1.1rem 1.05rem;
-    border: 1px solid var(--primary-low);
-    border-inline-start: 3px solid var(--tertiary);
-    border-radius: 12px;
-    background: var(--primary-very-low);
   }
 
   &__label {
-    margin: 0 0 0.45rem;
+    margin: 0 0 0.55rem;
     color: var(--primary);
     font-size: var(--font-up-1);
     line-height: var(--line-height-medium);
   }
 
   &__text {
-    margin: 0;
+    min-height: 1.35rem;
+    padding: 0.95rem 1.05rem;
+    border: 1px solid var(--primary-low);
+    border-radius: 12px;
+    background: var(--primary-very-low);
     white-space: pre-line;
     overflow-wrap: anywhere;
     color: var(--primary-high);
@@ -169,6 +166,13 @@
     font-size: var(--font-down-1);
   }
 
+  .d-modal__footer {
+    justify-content: flex-end;
+    padding: 1rem 2rem 1.35rem;
+    border-top: 1px solid var(--primary-low);
+    background: var(--secondary);
+  }
+
   &__acknowledge,
   &__done {
     min-width: 6.5rem;
@@ -181,13 +185,14 @@
   align-items: center;
   width: 100%;
   min-width: 0;
-  gap: 0.5rem;
+  gap: 0.55rem;
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--primary-low-mid);
   border-radius: var(--d-button-border-radius, var(--d-border-radius));
   background: var(--primary-very-low);
   color: var(--primary-medium);
   text-align: left;
+  cursor: pointer;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -211,27 +216,56 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &--short {
+    display: none;
+  }
 }
 
 .messaging-preferences-card__compact-action {
   flex: 0 0 auto;
   margin-left: auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--d-button-border-radius, var(--d-border-radius));
+  background: var(--tertiary-very-low);
   color: var(--tertiary);
   font-weight: 600;
 }
 
+// Full-page desktop Chat keeps an inset banner with an explicit View action.
 .messaging-preferences-card__compact--chat-banner {
-  min-height: 2.6rem;
-  margin: 0.55rem 0.75rem 0;
+  min-height: 2.75rem;
   width: calc(100% - 1.5rem);
-  padding: 0.55rem 0.75rem;
+  margin: 0.65rem 0.75rem 0;
+  padding: 0.6rem 0.75rem;
   background: var(--secondary);
   box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+}
 
-  .messaging-preferences-card__compact-action {
-    padding: 0.2rem 0.5rem;
-    border-radius: var(--d-button-border-radius, var(--d-border-radius));
+// Drawer Chat has much less horizontal room. Use a full-width, one-piece
+// clickable banner and hide the separate View action.
+.chat-drawer {
+  .messaging-preferences-card__compact--chat-banner {
+    width: 100%;
+    min-height: 3rem;
+    margin: 0;
+    padding: 0.65rem 1rem;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
     background: var(--tertiary-very-low);
+    box-shadow: none;
+  }
+
+  .messaging-preferences-card__compact-label--full,
+  .messaging-preferences-card__compact-action {
+    display: none;
+  }
+
+  .messaging-preferences-card__compact-label--short {
+    display: inline;
+    overflow: visible;
+    text-overflow: clip;
   }
 }
 
@@ -240,6 +274,16 @@
 ) {
   display: block;
   width: 100%;
+}
+
+@media screen and (max-width: 900px) {
+  .messaging-preferences-modal {
+    .d-modal__container {
+      width: calc(100vw - 1.5rem);
+      max-width: calc(100vw - 1.5rem);
+      max-height: calc(100dvh - 1.5rem);
+    }
+  }
 }
 
 @media screen and (max-width: 700px) {
@@ -261,7 +305,7 @@
     }
 
     &__header {
-      padding: 1.15rem 1rem 0.9rem;
+      padding: 1.45rem 1.15rem 1rem;
     }
 
     .d-modal__title-text {
@@ -269,16 +313,20 @@
     }
 
     &__body {
-      padding: 1rem;
+      padding: 1.15rem;
+    }
+
+    &__preferences {
+      gap: 1rem;
+    }
+
+    &__text {
+      padding: 0.85rem 0.9rem;
+      border-radius: 10px;
     }
 
     .d-modal__footer {
-      padding: 0.85rem 1rem 1rem;
-    }
-
-    &__preference {
-      padding: 0.9rem 0.95rem;
-      border-radius: 10px;
+      padding: 0.9rem 1.15rem 1.1rem;
     }
 
     &__acknowledge,
@@ -287,18 +335,38 @@
     }
   }
 
+  // On mobile the whole banner is the action. This prevents truncation and
+  // preserves all available room in the Chat composer below it.
   .messaging-preferences-card__compact--chat-banner {
-    min-height: 2.5rem;
-    margin: 0.45rem 0.5rem 0;
-    width: calc(100% - 1rem);
-    padding: 0.5rem 0.65rem;
+    width: 100%;
+    min-height: 3rem;
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    background: var(--tertiary-very-low);
+    box-shadow: none;
+  }
+
+  .messaging-preferences-card__compact--chat-banner {
+    .messaging-preferences-card__compact-label--full,
+    .messaging-preferences-card__compact-action {
+      display: none;
+    }
+
+    .messaging-preferences-card__compact-label--short {
+      display: inline;
+      overflow: visible;
+      text-overflow: clip;
+    }
   }
 }
 
 @media screen and (max-width: 420px) {
   .messaging-preferences-modal {
     &__header {
-      padding-top: 1rem;
+      padding-top: 1.3rem;
     }
 
     .d-modal__subtitle-text {
@@ -306,22 +374,11 @@
     }
 
     &__body {
-      padding: 0.85rem;
+      padding: 1rem;
     }
 
     &__preferences {
-      gap: 0.75rem;
-    }
-  }
-
-  .messaging-preferences-card__compact--chat-banner {
-    .messaging-preferences-card__compact-label {
-      font-size: var(--font-down-1);
-    }
-
-    .messaging-preferences-card__compact-action {
-      padding: 0.15rem 0.4rem;
-      font-size: var(--font-down-1);
+      gap: 0.9rem;
     }
   }
 }

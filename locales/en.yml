@@ -22,6 +22,7 @@ en:
       description: Please review %{username}'s preferences before continuing.
       compact_label: '%{username} has messaging preferences'
       chat_compact_label: '%{username} has messaging preferences'
+      chat_compact_label_short: Messaging preferences
       works_well: What works well for me
       please_avoid: Please avoid
       got_it: Got it
