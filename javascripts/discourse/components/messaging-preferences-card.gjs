@@ -85,6 +85,10 @@ export default class MessagingPreferencesCard extends Component {
   }
 
   get compactLabel() {
+    if (this.mode === "chat") {
+      return themeI18n("messaging_preferences.display.chat_compact_label");
+    }
+
     return themeI18n("messaging_preferences.display.compact_label", {
       username: this.activeUsername,
     });

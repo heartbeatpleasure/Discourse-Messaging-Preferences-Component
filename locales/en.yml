@@ -15,12 +15,13 @@ en:
         description: 'For example: repeated messages, unsolicited explicit content, or pressure to respond.'
         placeholder: Describe behaviour or types of messages you would prefer not to receive.
       character_count: '%{used} / %{maximum}'
-      save_hint: These preferences are saved with the Save Changes button below.
+      save_hint: These preferences belong to @%{username} and are saved with the Save Changes button below.
       load_error: The saved messaging preferences could not be loaded.
     display:
       title: Before messaging %{username}
       description: Please review %{username}'s preferences before continuing.
       compact_label: '%{username} has messaging preferences'
+      chat_compact_label: Preferences
       works_well: What works well for me
       please_avoid: Please avoid
       got_it: Got it

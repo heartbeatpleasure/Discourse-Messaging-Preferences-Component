@@ -100,7 +100,9 @@ export default class MessagingPreferencesConnector extends Component {
   }
 
   get saveHint() {
-    return themeI18n("messaging_preferences.settings.save_hint");
+    return themeI18n("messaging_preferences.settings.save_hint", {
+      username: this.currentUser?.username || this.model?.username,
+    });
   }
 
   get worksWell() {

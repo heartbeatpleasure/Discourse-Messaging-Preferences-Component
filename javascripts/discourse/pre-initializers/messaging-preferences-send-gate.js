@@ -22,8 +22,11 @@ export default {
           }
       );
 
+      // The channel composer is the concrete component instantiated for
+      // normal direct chats. Extending it directly makes the gate independent
+      // of whether the abstract base chat-composer class was imported earlier.
       api.modifyClass(
-        "component:chat-composer",
+        "component:chat/composer/channel",
         (Superclass) =>
           class extends Superclass {
             @service messagingPreferencesGate;
