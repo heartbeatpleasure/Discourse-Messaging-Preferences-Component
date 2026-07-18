@@ -42,6 +42,8 @@ export default class MessagingPreferencesComposerConnector extends Component {
   @service messagingPreferencesGate;
   @service siteSettings;
 
+  activeModel = null;
+
   get model() {
     return this.args.model || this.args.outletArgs?.model;
   }
@@ -101,7 +103,7 @@ export default class MessagingPreferencesComposerConnector extends Component {
   @action
   requirementChanged(required) {
     this.messagingPreferencesGate.setComposerBlocked(
-      this.model,
+      this.activeModel || this.model,
       required === true
     );
   }
@@ -113,26 +115,38 @@ export default class MessagingPreferencesComposerConnector extends Component {
     );
 
     this.messagingPreferencesGate.setComposerBlocked(
-      this.model,
+      this.activeModel || this.model,
       Boolean(this.targetUsername) && acknowledgementEnabled
     );
   }
 
   @action
+  setupGate() {
+    this.activeModel = this.model;
+    this.initializeGate();
+  }
+
+  @action
   targetChanged() {
+    if (this.activeModel && this.activeModel !== this.model) {
+      this.messagingPreferencesGate.clearComposer(this.activeModel);
+    }
+
+    this.activeModel = this.model;
     this.initializeGate();
   }
 
   @action
   cleanup() {
-    this.messagingPreferencesGate.clearComposer(this.model);
+    this.messagingPreferencesGate.clearComposer(this.activeModel || this.model);
+    this.activeModel = null;
   }
 
   <template>
     <div
       class="messaging-preferences-composer-slot"
-      {{didInsert this.initializeGate}}
-      {{didUpdate this.targetChanged this.targetUsername}}
+      {{didInsert this.setupGate}}
+      {{didUpdate this.targetChanged this.targetUsername this.model}}
       {{willDestroy this.cleanup}}
     >
       {{#if this.targetUsername}}

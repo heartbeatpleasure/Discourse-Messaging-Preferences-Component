@@ -54,6 +54,8 @@ export default class MessagingPreferencesCard extends Component {
   @tracked activeUsername = null;
 
   requestSequence = 0;
+  lastLoadedAt = 0;
+  refreshIntervalMs = 15_000;
 
   get mode() {
     return this.args.mode === "chat" ? "chat" : "message";
@@ -171,31 +173,78 @@ export default class MessagingPreferencesCard extends Component {
 
   @action
   setup() {
-    this.load(this.args.username);
+    window.addEventListener("focus", this.refreshWhenVisible);
+    document.addEventListener("visibilitychange", this.refreshWhenVisible);
+    this.load(this.args.username, { force: true });
   }
 
   @action
   usernameChanged(_element, username) {
-    this.load(username);
+    this.load(username, { force: true });
   }
 
-  async load(username) {
+  @action
+  refreshWhenVisible() {
+    if (document.visibilityState === "hidden") {
+      return;
+    }
+
+    if (Date.now() - this.lastLoadedAt < this.refreshIntervalMs) {
+      return;
+    }
+
+    this.load(this.activeUsername || this.args.username, {
+      preserveExpanded: true,
+    });
+  }
+
+  async load(
+    username,
+    {
+      force = false,
+      preserveExpanded = false,
+      openAfterLoad = false,
+      blockDuringLoad = true,
+    } = {}
+  ) {
     const normalizedUsername = normalizeUsername(username);
     const requestSequence = ++this.requestSequence;
+    const usernameChanged = normalizedUsername !== this.activeUsername;
+    const previousExpanded =
+      !usernameChanged && preserveExpanded && this.expanded;
 
-    this.preferences = null;
+    if (
+      !force &&
+      normalizedUsername === this.activeUsername &&
+      Date.now() - this.lastLoadedAt < this.refreshIntervalMs
+    ) {
+      if (openAfterLoad && this.preferences?.has_preferences) {
+        this.expanded = true;
+      }
+      return;
+    }
+
     this.errorMessage = null;
-    this.expanded = false;
+
+    if (usernameChanged) {
+      this.preferences = null;
+      this.expanded = false;
+    }
+
     this.activeUsername = normalizedUsername || null;
 
     if (!normalizedUsername) {
+      this.preferences = null;
+      this.expanded = false;
       this.args.onRequirementChange?.(false);
       return;
     }
 
     // Only block during the server check when acknowledgements are enabled.
     // Informational-only mode never disables the composer or Chat send button.
-    this.args.onRequirementChange?.(this.acknowledgementFeatureEnabled);
+    if (blockDuringLoad) {
+      this.args.onRequirementChange?.(this.acknowledgementFeatureEnabled);
+    }
 
     try {
       const preferences = await fetchPreferences(normalizedUsername);
@@ -204,13 +253,20 @@ export default class MessagingPreferencesCard extends Component {
         return;
       }
 
+      this.lastLoadedAt = Date.now();
+
       if (!preferences?.has_preferences) {
+        this.preferences = null;
+        this.expanded = false;
         this.args.onRequirementChange?.(false);
         return;
       }
 
       this.preferences = preferences;
-      this.expanded = preferences.acknowledgement_required === true;
+      this.expanded =
+        preferences.acknowledgement_required === true ||
+        previousExpanded ||
+        openAfterLoad;
       this.args.onRequirementChange?.(
         preferences.acknowledgement_required === true
       );
@@ -219,6 +275,9 @@ export default class MessagingPreferencesCard extends Component {
         return;
       }
 
+      this.lastLoadedAt = Date.now();
+      this.preferences = null;
+      this.expanded = false;
       this.args.onRequirementChange?.(false);
 
       const status = responseStatus(error);
@@ -231,8 +290,13 @@ export default class MessagingPreferencesCard extends Component {
   }
 
   @action
-  show() {
-    this.expanded = true;
+  async show() {
+    await this.load(this.activeUsername || this.args.username, {
+      force: true,
+      preserveExpanded: true,
+      openAfterLoad: true,
+      blockDuringLoad: false,
+    });
   }
 
   @action
@@ -298,6 +362,8 @@ export default class MessagingPreferencesCard extends Component {
       super.willDestroy(...arguments);
     }
 
+    window.removeEventListener("focus", this.refreshWhenVisible);
+    document.removeEventListener("visibilitychange", this.refreshWhenVisible);
     this.requestSequence += 1;
     this.args.onRequirementChange?.(false);
   }

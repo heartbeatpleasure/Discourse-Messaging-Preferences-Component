@@ -1,6 +1,7 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
+import { next } from "@ember/runloop";
 import { service } from "@ember/service";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
@@ -36,6 +37,8 @@ export default class MessagingPreferencesChatEntry extends Component {
   @tracked portalElement;
 
   markerElement = null;
+  activeChannel = null;
+  hostOwnerId = `messaging-preferences-${Date.now()}-${Math.random()}`;
 
   get channel() {
     return this.args.outletArgs?.channel || this.args.channel;
@@ -69,7 +72,7 @@ export default class MessagingPreferencesChatEntry extends Component {
   @action
   requirementChanged(required) {
     this.messagingPreferencesGate.setChatBlocked(
-      this.channel,
+      this.activeChannel || this.channel,
       required === true
     );
   }
@@ -82,13 +85,38 @@ export default class MessagingPreferencesChatEntry extends Component {
     if (this.targetUsername && acknowledgementEnabled) {
       // Block sending while the current server-side preference version is
       // being checked or still requires acknowledgement.
-      this.messagingPreferencesGate.setChatBlocked(this.channel, true);
+      this.messagingPreferencesGate.setChatBlocked(
+        this.activeChannel || this.channel,
+        true
+      );
     } else {
-      this.messagingPreferencesGate.clearChat(this.channel);
+      this.messagingPreferencesGate.clearChat(
+        this.activeChannel || this.channel
+      );
     }
   }
 
+  removeBannerHost() {
+    const host = this.portalElement;
+    this.portalElement = null;
+
+    if (!host) {
+      return;
+    }
+
+    next(() => {
+      if (host.dataset.messagingPreferencesOwner === this.hostOwnerId) {
+        host.remove();
+      }
+    });
+  }
+
   attachBannerHost() {
+    if (!this.targetUsername) {
+      this.removeBannerHost();
+      return;
+    }
+
     const channelElement = this.markerElement?.closest(".chat-channel");
 
     if (!channelElement) {
@@ -105,25 +133,35 @@ export default class MessagingPreferencesChatEntry extends Component {
     }
 
     host.dataset.chatChannelId = String(this.channel?.id || "");
+    host.dataset.messagingPreferencesOwner = this.hostOwnerId;
     this.portalElement = host;
   }
 
   @action
   setup(element) {
     this.markerElement = element;
+    this.activeChannel = this.channel;
     this.initializeGate();
     this.attachBannerHost();
   }
 
   @action
   targetChanged() {
+    if (this.activeChannel && this.activeChannel !== this.channel) {
+      this.messagingPreferencesGate.clearChat(this.activeChannel);
+      this.removeBannerHost();
+    }
+
+    this.activeChannel = this.channel;
     this.initializeGate();
     this.attachBannerHost();
   }
 
   @action
   cleanup() {
-    this.messagingPreferencesGate.clearChat(this.channel);
+    this.messagingPreferencesGate.clearChat(this.activeChannel || this.channel);
+    this.removeBannerHost();
+    this.activeChannel = null;
     this.markerElement = null;
   }
 
