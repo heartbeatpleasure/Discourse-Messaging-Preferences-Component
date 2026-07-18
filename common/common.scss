@@ -241,3 +241,21 @@
   display: block;
   width: 100%;
 }
+
+.messaging-preferences-settings {
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  &__saved {
+    color: var(--success);
+  }
+
+  &__error {
+    margin: 0.75rem 0 0;
+    color: var(--danger);
+  }
+}
