@@ -393,9 +393,7 @@ export default class MessagingPreferencesCard extends Component {
                     <h3 class="messaging-preferences-modal__label">
                       {{this.worksWellLabel}}
                     </h3>
-                    <div class="messaging-preferences-modal__text">
-                      {{this.worksWell}}
-                    </div>
+                    <div class="messaging-preferences-modal__text">{{this.worksWell}}</div>
                   </section>
                 {{/if}}
 
@@ -404,9 +402,7 @@ export default class MessagingPreferencesCard extends Component {
                     <h3 class="messaging-preferences-modal__label">
                       {{this.pleaseAvoidLabel}}
                     </h3>
-                    <div class="messaging-preferences-modal__text">
-                      {{this.pleaseAvoid}}
-                    </div>
+                    <div class="messaging-preferences-modal__text">{{this.pleaseAvoid}}</div>
                   </section>
                 {{/if}}
 

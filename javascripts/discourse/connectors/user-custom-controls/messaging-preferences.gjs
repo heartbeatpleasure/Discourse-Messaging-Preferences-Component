@@ -115,6 +115,7 @@ export default class MessagingPreferencesConnector extends Component {
     return themeI18n("messaging_preferences.settings.please_avoid.placeholder");
   }
 
+
   get worksWell() {
     return this.worksWellValue;
   }
@@ -283,6 +284,7 @@ export default class MessagingPreferencesConnector extends Component {
             {{this.pleaseAvoidCountLabel}}
           </div>
         </div>
+
 
         {{#if this.loadFailed}}
           <p class="messaging-preferences-settings__error" role="alert">
