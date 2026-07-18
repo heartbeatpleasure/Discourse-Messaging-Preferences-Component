@@ -15,19 +15,17 @@ en:
         description: 'For example: repeated messages, unsolicited explicit content, or pressure to respond.'
         placeholder: Describe behaviour or types of messages you would prefer not to receive.
       character_count: '%{used} / %{maximum}'
-      save: Save messaging preferences
-      saving: Saving...
-      saved: Messaging preferences saved.
+      save_hint: These preferences are saved with the Save Changes button below.
       load_error: The saved messaging preferences could not be loaded.
-      save_error: Messaging preferences could not be saved.
     display:
       title: Before messaging %{username}
+      description: Please review %{username}'s preferences before continuing.
       compact_label: '%{username} has messaging preferences'
       works_well: What works well for me
       please_avoid: Please avoid
       got_it: Got it
       view: View
-      hide: Hide
+      close: Close
       view_title: View %{username}'s messaging preferences
       load_error: Messaging preferences could not be loaded.
       acknowledge_error: The preferences could not be acknowledged. Please try again.

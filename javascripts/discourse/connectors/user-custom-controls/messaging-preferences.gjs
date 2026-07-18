@@ -1,12 +1,11 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { fn } from "@ember/helper";
+import { on } from "@ember/modifier";
 import { action, set } from "@ember/object";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import { service } from "@ember/service";
-import { on } from "@ember/modifier";
 import { ajax } from "discourse/lib/ajax";
-import { popupAjaxError } from "discourse/lib/ajax-error";
 import getURL from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
 import { themePrefix } from "virtual:theme";
@@ -20,14 +19,12 @@ function themeI18n(key, options) {
 }
 
 export default class MessagingPreferencesConnector extends Component {
+  @service currentUser;
   @service siteSettings;
 
   @tracked worksWellValue = "";
   @tracked pleaseAvoidValue = "";
-  @tracked isSaving = false;
-  @tracked saved = false;
   @tracked loadFailed = false;
-  @tracked saveFailed = false;
   @tracked hasLoadedFromServer = false;
   @tracked hasLocalEdits = false;
 
@@ -47,11 +44,26 @@ export default class MessagingPreferencesConnector extends Component {
     return this.args.model || this.args.outletArgs?.model;
   }
 
+  get isCurrentUser() {
+    if (!this.currentUser || !this.model) {
+      return false;
+    }
+
+    if (this.currentUser.id !== undefined && this.model.id !== undefined) {
+      return String(this.currentUser.id) === String(this.model.id);
+    }
+
+    return (
+      String(this.currentUser.username || "").toLowerCase() ===
+      String(this.model.username || "").toLowerCase()
+    );
+  }
+
   get shouldRender() {
     return (
       this.siteSettings?.messaging_preferences_enabled !== false &&
-      this.model &&
-      this.model.can_edit !== false
+      this.model?.can_edit !== false &&
+      this.isCurrentUser
     );
   }
 
@@ -87,6 +99,10 @@ export default class MessagingPreferencesConnector extends Component {
     return themeI18n("messaging_preferences.settings.please_avoid.placeholder");
   }
 
+  get saveHint() {
+    return themeI18n("messaging_preferences.settings.save_hint");
+  }
+
   get worksWell() {
     return this.worksWellValue;
   }
@@ -117,24 +133,8 @@ export default class MessagingPreferencesConnector extends Component {
     });
   }
 
-  get saveLabel() {
-    return themeI18n("messaging_preferences.settings.save");
-  }
-
-  get savingLabel() {
-    return themeI18n("messaging_preferences.settings.saving");
-  }
-
-  get savedLabel() {
-    return themeI18n("messaging_preferences.settings.saved");
-  }
-
   get loadErrorLabel() {
     return themeI18n("messaging_preferences.settings.load_error");
-  }
-
-  get saveErrorLabel() {
-    return themeI18n("messaging_preferences.settings.save_error");
   }
 
   updateModelFields(worksWell, pleaseAvoid) {
@@ -172,7 +172,8 @@ export default class MessagingPreferencesConnector extends Component {
       const response = await ajax(
         getURL(
           `/messaging-preferences/v1/users/${encodeURIComponent(this.model.username)}`
-        )
+        ),
+        { cache: false }
       );
 
       if (!this.hasLocalEdits) {
@@ -194,40 +195,7 @@ export default class MessagingPreferencesConnector extends Component {
     }
 
     this.hasLocalEdits = true;
-    this.saved = false;
-    this.saveFailed = false;
     this.updateModelFields(this.worksWellValue, this.pleaseAvoidValue);
-  }
-
-  @action
-  async savePreferences() {
-    if (this.isSaving) {
-      return;
-    }
-
-    this.isSaving = true;
-    this.saved = false;
-    this.saveFailed = false;
-
-    try {
-      const response = await ajax(getURL("/messaging-preferences/v1/me"), {
-        type: "PUT",
-        data: {
-          works_well: this.worksWellValue,
-          please_avoid: this.pleaseAvoidValue,
-        },
-      });
-
-      this.applyServerPreferences(response?.messaging_preferences);
-      this.hasLocalEdits = false;
-      this.loadFailed = false;
-      this.saved = true;
-    } catch (error) {
-      this.saveFailed = true;
-      popupAjaxError(error);
-    } finally {
-      this.isSaving = false;
-    }
   }
 
   <template>
@@ -304,40 +272,13 @@ export default class MessagingPreferencesConnector extends Component {
           </div>
         </div>
 
-        <div class="messaging-preferences-settings__actions">
-          <button
-            type="button"
-            class="btn btn-primary messaging-preferences-settings__save"
-            disabled={{this.isSaving}}
-            aria-busy={{this.isSaving}}
-            {{on "click" this.savePreferences}}
-          >
-            {{#if this.isSaving}}
-              {{this.savingLabel}}
-            {{else}}
-              {{this.saveLabel}}
-            {{/if}}
-          </button>
-
-          {{#if this.saved}}
-            <span
-              class="messaging-preferences-settings__saved"
-              role="status"
-            >
-              {{this.savedLabel}}
-            </span>
-          {{/if}}
-        </div>
+        <p class="messaging-preferences-settings__save-hint">
+          {{this.saveHint}}
+        </p>
 
         {{#if this.loadFailed}}
           <p class="messaging-preferences-settings__error" role="alert">
             {{this.loadErrorLabel}}
-          </p>
-        {{/if}}
-
-        {{#if this.saveFailed}}
-          <p class="messaging-preferences-settings__error" role="alert">
-            {{this.saveErrorLabel}}
           </p>
         {{/if}}
       </section>

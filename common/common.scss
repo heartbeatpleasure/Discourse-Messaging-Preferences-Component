@@ -1,6 +1,8 @@
 .messaging-preferences-settings {
-  margin-top: 2.5rem;
   max-width: 46rem;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--primary-low);
 
   &__title {
     margin: 0 0 0.5rem;
@@ -43,15 +45,16 @@
     font-size: var(--font-down-1);
     text-align: right;
   }
-}
 
-@media screen and (max-width: 700px) {
-  .messaging-preferences-settings {
-    margin-top: 2rem;
+  &__save-hint {
+    margin: -0.25rem 0 1rem;
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+  }
 
-    &__textarea {
-      min-height: 7.5rem;
-    }
+  &__error {
+    margin: 0.75rem 0 0;
+    color: var(--danger);
   }
 }
 
@@ -78,127 +81,126 @@
   }
 }
 
-.messaging-preferences-card {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--primary-low-mid);
-  border-radius: var(--d-border-radius);
-  background: var(--secondary);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
-  color: var(--primary);
-
-  &__header,
-  &__heading,
-  &__actions,
-  &__compact {
-    display: flex;
-    align-items: center;
+.messaging-preferences-modal {
+  .d-modal__container {
+    width: min(36rem, calc(100vw - 2rem));
+    max-width: 36rem;
   }
 
-  &__header {
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
+  .d-modal__header {
+    padding: 1.25rem 1.35rem 1.1rem;
+    border-bottom-color: var(--primary-low);
   }
 
-  &__heading {
-    min-width: 0;
-    gap: 0.45rem;
+  .d-modal__title-text {
+    font-size: var(--font-up-2);
+    line-height: var(--line-height-large);
+  }
+
+  .d-modal__subtitle-text {
+    margin-top: 0.35rem;
+    color: var(--primary-medium);
     line-height: var(--line-height-medium);
   }
 
-  &__heading .d-icon {
-    flex: 0 0 auto;
-    color: var(--tertiary);
+  .d-modal__footer {
+    justify-content: flex-end;
+    padding: 1rem 1.35rem;
+    border-top-color: var(--primary-low);
   }
 
-  &__close {
-    flex: 0 0 auto;
-    padding: 0.2rem;
-    color: var(--primary-medium);
+  &__body {
+    padding: 1.25rem 1.35rem;
   }
 
-  &__content {
+  &__preferences {
     display: grid;
-    gap: 0.8rem;
+    gap: 1rem;
   }
 
   &__preference {
     min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--primary-low);
+    border-radius: var(--d-border-radius);
+    background: var(--primary-very-low);
   }
 
   &__label {
-    margin-bottom: 0.2rem;
-    font-weight: 600;
+    margin: 0 0 0.45rem;
+    font-size: var(--font-up-1);
+    line-height: var(--line-height-medium);
   }
 
   &__text {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     color: var(--primary-high);
-    line-height: var(--line-height-medium);
-  }
-
-  &__actions {
-    justify-content: flex-end;
-    margin-top: 0.85rem;
-  }
-
-  &__hide {
-    color: var(--primary-medium);
+    line-height: var(--line-height-large);
   }
 
   &__error {
-    margin-top: 0.75rem;
     color: var(--danger);
     font-size: var(--font-down-1);
   }
 
-  &__compact {
-    width: 100%;
-    gap: 0.4rem;
-    padding: 0.35rem 0;
-    color: var(--primary-medium);
-    text-align: left;
-  }
-
-  &__compact:hover,
-  &__compact:focus-visible {
-    color: var(--primary);
-  }
-
-  &__compact-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__compact-action {
-    margin-left: auto;
-    color: var(--tertiary);
-    font-weight: 600;
+  &__acknowledge,
+  &__done {
+    min-width: 6rem;
   }
 }
 
-.messaging-preferences-card-host--chat {
-  .messaging-preferences-card {
-    position: absolute;
-    right: 0;
-    bottom: calc(100% + 0.75rem);
-    z-index: 1400;
-    width: min(28rem, calc(100vw - 2rem));
-    max-height: min(28rem, calc(100vh - 8rem));
-    overflow-y: auto;
+.messaging-preferences-modal + .d-modal__backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.messaging-preferences-card__compact {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.45rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--primary-low-mid);
+  border-radius: var(--d-border-radius);
+  background: var(--primary-very-low);
+  color: var(--primary-medium);
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--primary-medium);
+    background: var(--primary-low);
+    color: var(--primary);
   }
 
+  .d-icon {
+    flex: 0 0 auto;
+    color: var(--tertiary);
+  }
+}
+
+.messaging-preferences-card__compact-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messaging-preferences-card__compact-action {
+  margin-left: auto;
+  color: var(--tertiary);
+  font-weight: 600;
+}
+
+.messaging-preferences-card-host--chat {
   .messaging-preferences-card__compact {
     justify-content: center;
     width: 2.25rem;
     height: 2.25rem;
     padding: 0;
+    border: 0;
     border-radius: 50%;
+    background: transparent;
   }
 
   .messaging-preferences-card__compact-label,
@@ -215,26 +217,6 @@
   }
 }
 
-@media screen and (max-width: 700px) {
-  .messaging-preferences-card {
-    padding: 0.75rem 0.85rem;
-  }
-
-  .messaging-preferences-card-host--chat .messaging-preferences-card {
-    right: -3rem;
-    width: calc(100vw - 1rem);
-    max-height: calc(100vh - 7rem);
-  }
-}
-
-// The chat composer clips inline content by default. Allow the preference card
-// to extend above it only while the expanded card is present.
-.chat-composer__inner-container:has(
-  .messaging-preferences-card-host--chat .messaging-preferences-card
-) {
-  overflow: visible;
-}
-
 .composer-open-plugin-outlet-container:has(
   .messaging-preferences-composer-slot
 ) {
@@ -242,20 +224,35 @@
   width: 100%;
 }
 
-.messaging-preferences-settings {
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.25rem;
+@media screen and (max-width: 700px) {
+  .messaging-preferences-settings {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+
+    &__textarea {
+      min-height: 7.5rem;
+    }
   }
 
-  &__saved {
-    color: var(--success);
-  }
+  .messaging-preferences-modal {
+    .d-modal__container {
+      width: 100%;
+      max-width: 100%;
+    }
 
-  &__error {
-    margin: 0.75rem 0 0;
-    color: var(--danger);
+    .d-modal__header,
+    &__body {
+      padding-right: 1rem;
+      padding-left: 1rem;
+    }
+
+    .d-modal__footer {
+      padding: 0.85rem 1rem;
+    }
+
+    &__acknowledge,
+    &__done {
+      width: 100%;
+    }
   }
 }

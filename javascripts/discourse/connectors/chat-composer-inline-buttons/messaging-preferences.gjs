@@ -9,12 +9,32 @@ import MessagingPreferencesCard from "../../components/messaging-preferences-car
 function settingEnabled(value) {
   return value !== false && value !== "false" && value !== 0 && value !== "0";
 }
+function sameUser(first, second) {
+  if (!first || !second) {
+    return false;
+  }
 
-function sameUserId(first, second) {
+  if (
+    first.id !== null &&
+    first.id !== undefined &&
+    second.id !== null &&
+    second.id !== undefined
+  ) {
+    return String(first.id) === String(second.id);
+  }
+
   return (
-    first !== null &&
-    first !== undefined &&
-    String(first) === String(second)
+    String(first.username || "").toLowerCase() ===
+    String(second.username || "").toLowerCase()
+  );
+}
+
+function isDirectMessageChannel(channel) {
+  return (
+    channel?.isDirectMessageChannel === true ||
+    channel?.chatableType === "DirectMessage" ||
+    channel?.chatable_type === "DirectMessage" ||
+    channel?.chatable?.type === "DirectMessage"
   );
 }
 
@@ -23,8 +43,17 @@ export default class MessagingPreferencesChatConnector extends Component {
   @service messagingPreferencesGate;
   @service siteSettings;
 
+  get composer() {
+    return this.args.composer || this.args.outletArgs?.composer;
+  }
+
   get channel() {
-    return this.args.channel || this.args.outletArgs?.channel;
+    return (
+      this.args.channel ||
+      this.args.outletArgs?.channel ||
+      this.composer?.args?.channel ||
+      null
+    );
   }
 
   get targetUsername() {
@@ -32,19 +61,16 @@ export default class MessagingPreferencesChatConnector extends Component {
 
     if (
       !this.currentUser ||
-      !channel?.isDirectMessageChannel ||
-      channel.chatable?.group === true ||
+      !isDirectMessageChannel(channel) ||
+      Boolean(channel?.chatable?.group) ||
       !settingEnabled(this.siteSettings?.messaging_preferences_enabled)
     ) {
       return null;
     }
 
-    // Discourse omits the current member from serialized direct-message users
-    // when another participant exists. A one-to-one DM therefore contains one
-    // target user here; a self-DM contains only the current user.
-    const targets = (channel.chatable?.users || []).filter(
-      (user) =>
-        user?.username && !sameUserId(user.id, this.currentUser.id)
+    const users = channel?.chatable?.users || channel?.users || [];
+    const targets = users.filter(
+      (user) => user?.username && !sameUser(user, this.currentUser)
     );
 
     return targets.length === 1 ? targets[0].username : null;

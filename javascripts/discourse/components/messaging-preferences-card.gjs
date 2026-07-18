@@ -2,17 +2,15 @@ import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
-import { service } from "@ember/service";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
 import { ajax } from "discourse/lib/ajax";
 import getURL from "discourse/lib/get-url";
+import { not } from "discourse/truth-helpers";
+import DModal from "discourse/ui-kit/d-modal";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
 import { themePrefix } from "virtual:theme";
-
-const CACHE_TTL_MS = 10_000;
-const preferenceCache = new Map();
 
 function themeI18n(key, options) {
   return i18n(themePrefix(key), options);
@@ -24,54 +22,24 @@ function normalizeUsername(username) {
     .replace(/^@/, "");
 }
 
-function cacheKeyFor(viewerUserId, username) {
-  const normalizedUsername = normalizeUsername(username).toLowerCase();
-  return `${viewerUserId || "anonymous"}:${normalizedUsername}`;
-}
-
 function responseStatus(error) {
   return error?.jqXHR?.status || error?.status;
 }
 
-async function fetchPreferences(username, viewerUserId, { force = false } = {}) {
+async function fetchPreferences(username) {
   const normalizedUsername = normalizeUsername(username);
-  const cacheKey = cacheKeyFor(viewerUserId, normalizedUsername);
-  const cached = preferenceCache.get(cacheKey);
-
-  if (!force && cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
-    return cached.preferences;
-  }
 
   const response = await ajax(
     getURL(
       `/messaging-preferences/v1/users/${encodeURIComponent(normalizedUsername)}`
-    )
+    ),
+    { cache: false }
   );
-  const preferences = response?.messaging_preferences || null;
 
-  preferenceCache.set(cacheKey, {
-    fetchedAt: Date.now(),
-    preferences,
-  });
-
-  return preferences;
-}
-
-function cachePreferences(username, viewerUserId, preferences) {
-  const normalizedUsername = normalizeUsername(username);
-  if (!normalizedUsername) {
-    return;
-  }
-
-  preferenceCache.set(cacheKeyFor(viewerUserId, normalizedUsername), {
-    fetchedAt: Date.now(),
-    preferences,
-  });
+  return response?.messaging_preferences || null;
 }
 
 export default class MessagingPreferencesCard extends Component {
-  @service currentUser;
-
   @tracked preferences;
   @tracked expanded = false;
   @tracked acknowledgementInProgress = false;
@@ -110,6 +78,12 @@ export default class MessagingPreferencesCard extends Component {
     });
   }
 
+  get description() {
+    return themeI18n("messaging_preferences.display.description", {
+      username: this.activeUsername,
+    });
+  }
+
   get compactLabel() {
     return themeI18n("messaging_preferences.display.compact_label", {
       username: this.activeUsername,
@@ -132,8 +106,8 @@ export default class MessagingPreferencesCard extends Component {
     return themeI18n("messaging_preferences.display.view");
   }
 
-  get hideLabel() {
-    return themeI18n("messaging_preferences.display.hide");
+  get closeLabel() {
+    return themeI18n("messaging_preferences.display.close");
   }
 
   get compactTitle() {
@@ -152,7 +126,7 @@ export default class MessagingPreferencesCard extends Component {
     this.load(username);
   }
 
-  async load(username, { force = false } = {}) {
+  async load(username) {
     const normalizedUsername = normalizeUsername(username);
     const requestSequence = ++this.requestSequence;
 
@@ -166,15 +140,12 @@ export default class MessagingPreferencesCard extends Component {
       return;
     }
 
-    // Prevent a quick send while the current preference version is being checked.
+    // Prevent sending until the current server-side preference version has
+    // been checked. Every composer/chat open performs a fresh request.
     this.args.onRequirementChange?.(true);
 
     try {
-      const preferences = await fetchPreferences(
-        normalizedUsername,
-        this.currentUser?.id,
-        { force }
-      );
+      const preferences = await fetchPreferences(normalizedUsername);
 
       if (requestSequence !== this.requestSequence) {
         return;
@@ -212,7 +183,7 @@ export default class MessagingPreferencesCard extends Component {
   }
 
   @action
-  hide() {
+  close() {
     if (!this.acknowledgementRequired) {
       this.expanded = false;
     }
@@ -252,18 +223,13 @@ export default class MessagingPreferencesCard extends Component {
       }
 
       this.preferences = preferences;
-      cachePreferences(
-        this.activeUsername,
-        this.currentUser?.id,
-        preferences
-      );
       this.expanded = false;
       this.args.onRequirementChange?.(false);
     } catch (error) {
       const status = responseStatus(error);
 
       if ([403, 404, 409, 422].includes(status)) {
-        await this.load(this.activeUsername, { force: true });
+        await this.load(this.activeUsername);
       } else {
         this.errorMessage = themeI18n(
           "messaging_preferences.display.acknowledge_error"
@@ -291,68 +257,57 @@ export default class MessagingPreferencesCard extends Component {
     >
       {{#if this.shouldRender}}
         {{#if this.expanded}}
-          <section
-            class="messaging-preferences-card"
-            aria-label={{this.title}}
+          <DModal
+            @title={{this.title}}
+            @subtitle={{this.description}}
+            @closeModal={{this.close}}
+            @dismissable={{not this.acknowledgementRequired}}
+            @submitOnEnter={{false}}
+            @bodyClass="messaging-preferences-modal__body"
+            class="messaging-preferences-modal"
           >
-            <div class="messaging-preferences-card__header">
-              <div class="messaging-preferences-card__heading">
-                {{dIcon "circle-info"}}
-                <strong>{{this.title}}</strong>
+            <:body>
+              <div class="messaging-preferences-modal__preferences">
+                {{#if this.worksWell}}
+                  <section class="messaging-preferences-modal__preference">
+                    <h3 class="messaging-preferences-modal__label">
+                      {{this.worksWellLabel}}
+                    </h3>
+                    <div class="messaging-preferences-modal__text">
+                      {{this.worksWell}}
+                    </div>
+                  </section>
+                {{/if}}
+
+                {{#if this.pleaseAvoid}}
+                  <section class="messaging-preferences-modal__preference">
+                    <h3 class="messaging-preferences-modal__label">
+                      {{this.pleaseAvoidLabel}}
+                    </h3>
+                    <div class="messaging-preferences-modal__text">
+                      {{this.pleaseAvoid}}
+                    </div>
+                  </section>
+                {{/if}}
+
+                {{#if this.errorMessage}}
+                  <div
+                    class="messaging-preferences-modal__error"
+                    role="alert"
+                  >
+                    {{this.errorMessage}}
+                  </div>
+                {{/if}}
               </div>
+            </:body>
 
-              {{#unless this.acknowledgementRequired}}
-                <button
-                  type="button"
-                  class="btn-flat messaging-preferences-card__close"
-                  title={{this.hideLabel}}
-                  aria-label={{this.hideLabel}}
-                  {{on "click" this.hide}}
-                >
-                  {{dIcon "xmark"}}
-                </button>
-              {{/unless}}
-            </div>
-
-            <div class="messaging-preferences-card__content">
-              {{#if this.worksWell}}
-                <div class="messaging-preferences-card__preference">
-                  <div class="messaging-preferences-card__label">
-                    {{this.worksWellLabel}}
-                  </div>
-                  <div class="messaging-preferences-card__text">
-                    {{this.worksWell}}
-                  </div>
-                </div>
-              {{/if}}
-
-              {{#if this.pleaseAvoid}}
-                <div class="messaging-preferences-card__preference">
-                  <div class="messaging-preferences-card__label">
-                    {{this.pleaseAvoidLabel}}
-                  </div>
-                  <div class="messaging-preferences-card__text">
-                    {{this.pleaseAvoid}}
-                  </div>
-                </div>
-              {{/if}}
-            </div>
-
-            {{#if this.errorMessage}}
-              <div
-                class="messaging-preferences-card__error"
-                role="alert"
-              >
-                {{this.errorMessage}}
-              </div>
-            {{/if}}
-
-            <div class="messaging-preferences-card__actions">
+            <:footer>
               {{#if this.acknowledgementRequired}}
                 <button
                   type="button"
-                  class="btn btn-primary messaging-preferences-card__acknowledge"
+                  class="btn btn-primary messaging-preferences-modal__acknowledge"
                   disabled={{this.acknowledgementInProgress}}
+                  aria-busy={{this.acknowledgementInProgress}}
                   {{on "click" this.acknowledge}}
                 >
                   {{this.gotItLabel}}
@@ -360,14 +315,14 @@ export default class MessagingPreferencesCard extends Component {
               {{else}}
                 <button
                   type="button"
-                  class="btn-flat messaging-preferences-card__hide"
-                  {{on "click" this.hide}}
+                  class="btn btn-primary messaging-preferences-modal__done"
+                  {{on "click" this.close}}
                 >
-                  {{this.hideLabel}}
+                  {{this.closeLabel}}
                 </button>
               {{/if}}
-            </div>
-          </section>
+            </:footer>
+          </DModal>
         {{else}}
           <button
             type="button"
