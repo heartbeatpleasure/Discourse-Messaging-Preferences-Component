@@ -115,12 +115,6 @@ export default class MessagingPreferencesConnector extends Component {
     return themeI18n("messaging_preferences.settings.please_avoid.placeholder");
   }
 
-  get saveHint() {
-    return themeI18n("messaging_preferences.settings.save_hint", {
-      username: this.currentUser?.username || this.model?.username,
-    });
-  }
-
   get worksWell() {
     return this.worksWellValue;
   }
@@ -289,10 +283,6 @@ export default class MessagingPreferencesConnector extends Component {
             {{this.pleaseAvoidCountLabel}}
           </div>
         </div>
-
-        <p class="messaging-preferences-settings__save-hint">
-          {{this.saveHint}}
-        </p>
 
         {{#if this.loadFailed}}
           <p class="messaging-preferences-settings__error" role="alert">
