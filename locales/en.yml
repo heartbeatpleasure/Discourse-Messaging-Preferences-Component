@@ -15,3 +15,15 @@ en:
         description: "For example: repeated messages, unsolicited explicit content, or pressure to respond."
         placeholder: "Describe behaviour or types of messages you would prefer not to receive."
       character_count: "%{used} / %{maximum}"
+
+    display:
+      title: "Before messaging %{username}"
+      compact_label: "%{username} has messaging preferences"
+      works_well: "What works well for me"
+      please_avoid: "Please avoid"
+      got_it: "Got it"
+      view: "View"
+      hide: "Hide"
+      view_title: "View %{username}'s messaging preferences"
+      load_error: "Messaging preferences could not be loaded."
+      acknowledge_error: "The preferences could not be acknowledged. Please try again."

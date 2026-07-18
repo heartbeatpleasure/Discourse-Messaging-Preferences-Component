@@ -54,3 +54,190 @@
     }
   }
 }
+
+.messaging-preferences-composer-slot {
+  width: 100%;
+  margin: 0 0 0.75rem;
+}
+
+.messaging-preferences-chat-slot {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.messaging-preferences-card-host {
+  display: block;
+
+  &--chat {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+  }
+}
+
+.messaging-preferences-card {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--primary-low-mid);
+  border-radius: var(--d-border-radius);
+  background: var(--secondary);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+  color: var(--primary);
+
+  &__header,
+  &__heading,
+  &__actions,
+  &__compact {
+    display: flex;
+    align-items: center;
+  }
+
+  &__header {
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__heading {
+    min-width: 0;
+    gap: 0.45rem;
+    line-height: var(--line-height-medium);
+  }
+
+  &__heading .d-icon {
+    flex: 0 0 auto;
+    color: var(--tertiary);
+  }
+
+  &__close {
+    flex: 0 0 auto;
+    padding: 0.2rem;
+    color: var(--primary-medium);
+  }
+
+  &__content {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  &__preference {
+    min-width: 0;
+  }
+
+  &__label {
+    margin-bottom: 0.2rem;
+    font-weight: 600;
+  }
+
+  &__text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--primary-high);
+    line-height: var(--line-height-medium);
+  }
+
+  &__actions {
+    justify-content: flex-end;
+    margin-top: 0.85rem;
+  }
+
+  &__hide {
+    color: var(--primary-medium);
+  }
+
+  &__error {
+    margin-top: 0.75rem;
+    color: var(--danger);
+    font-size: var(--font-down-1);
+  }
+
+  &__compact {
+    width: 100%;
+    gap: 0.4rem;
+    padding: 0.35rem 0;
+    color: var(--primary-medium);
+    text-align: left;
+  }
+
+  &__compact:hover,
+  &__compact:focus-visible {
+    color: var(--primary);
+  }
+
+  &__compact-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__compact-action {
+    margin-left: auto;
+    color: var(--tertiary);
+    font-weight: 600;
+  }
+}
+
+.messaging-preferences-card-host--chat {
+  .messaging-preferences-card {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 0.75rem);
+    z-index: 1400;
+    width: min(28rem, calc(100vw - 2rem));
+    max-height: min(28rem, calc(100vh - 8rem));
+    overflow-y: auto;
+  }
+
+  .messaging-preferences-card__compact {
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .messaging-preferences-card__compact-label,
+  .messaging-preferences-card__compact-action {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .messaging-preferences-card {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .messaging-preferences-card-host--chat .messaging-preferences-card {
+    right: -3rem;
+    width: calc(100vw - 1rem);
+    max-height: calc(100vh - 7rem);
+  }
+}
+
+// The chat composer clips inline content by default. Allow the preference card
+// to extend above it only while the expanded card is present.
+.chat-composer__inner-container:has(
+  .messaging-preferences-card-host--chat .messaging-preferences-card
+) {
+  overflow: visible;
+}
+
+.composer-open-plugin-outlet-container:has(
+  .messaging-preferences-composer-slot
+) {
+  display: block;
+  width: 100%;
+}
