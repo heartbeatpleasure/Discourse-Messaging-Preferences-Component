@@ -69,7 +69,18 @@ export default class MessagingPreferencesCard extends Component {
   }
 
   get hostClass() {
-    return `messaging-preferences-card-host messaging-preferences-card-host--${this.mode}`;
+    const visibility = this.shouldRender ? "is-visible" : "is-hidden";
+
+    return `messaging-preferences-card-host messaging-preferences-card-host--${this.mode} ${visibility}`;
+  }
+
+  get compactClass() {
+    const modeClass =
+      this.mode === "chat"
+        ? "messaging-preferences-card__compact--chat-banner"
+        : "messaging-preferences-card__compact--message";
+
+    return `btn-flat messaging-preferences-card__compact ${modeClass}`;
   }
 
   get title() {
@@ -85,13 +96,12 @@ export default class MessagingPreferencesCard extends Component {
   }
 
   get compactLabel() {
-    if (this.mode === "chat") {
-      return themeI18n("messaging_preferences.display.chat_compact_label");
-    }
+    const key =
+      this.mode === "chat"
+        ? "messaging_preferences.display.chat_compact_label"
+        : "messaging_preferences.display.compact_label";
 
-    return themeI18n("messaging_preferences.display.compact_label", {
-      username: this.activeUsername,
-    });
+    return themeI18n(key, { username: this.activeUsername });
   }
 
   get worksWellLabel() {
@@ -267,30 +277,31 @@ export default class MessagingPreferencesCard extends Component {
             @closeModal={{this.close}}
             @dismissable={{not this.acknowledgementRequired}}
             @submitOnEnter={{false}}
+            @headerClass="messaging-preferences-modal__header"
             @bodyClass="messaging-preferences-modal__body"
             class="messaging-preferences-modal"
           >
             <:body>
               <div class="messaging-preferences-modal__preferences">
                 {{#if this.worksWell}}
-                  <section class="messaging-preferences-modal__preference">
+                  <section
+                    class="messaging-preferences-modal__preference messaging-preferences-modal__preference--works-well"
+                  >
                     <h3 class="messaging-preferences-modal__label">
                       {{this.worksWellLabel}}
                     </h3>
-                    <div class="messaging-preferences-modal__text">
-                      {{this.worksWell}}
-                    </div>
+                    <div class="messaging-preferences-modal__text">{{this.worksWell}}</div>
                   </section>
                 {{/if}}
 
                 {{#if this.pleaseAvoid}}
-                  <section class="messaging-preferences-modal__preference">
+                  <section
+                    class="messaging-preferences-modal__preference messaging-preferences-modal__preference--please-avoid"
+                  >
                     <h3 class="messaging-preferences-modal__label">
                       {{this.pleaseAvoidLabel}}
                     </h3>
-                    <div class="messaging-preferences-modal__text">
-                      {{this.pleaseAvoid}}
-                    </div>
+                    <div class="messaging-preferences-modal__text">{{this.pleaseAvoid}}</div>
                   </section>
                 {{/if}}
 
@@ -330,7 +341,7 @@ export default class MessagingPreferencesCard extends Component {
         {{else}}
           <button
             type="button"
-            class="btn-flat messaging-preferences-card__compact"
+            class={{this.compactClass}}
             title={{this.compactTitle}}
             aria-label={{this.compactTitle}}
             aria-expanded="false"
